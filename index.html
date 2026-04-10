@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartAgri AI | 農業AIアドバイザー</title>
+
+    <style>
+        /* =========================================
+           1. 全体スタイル・変数
+           ========================================= */
+        :root {
+            --primary-green: #4CAF50;
+            --dark-green: #388E3C;
+            --bg-color: #f0f4f7;
+            --card-white: #ffffff;
+            --text-dark: #333333;
+        }
+
+        body {
+            font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            color: var(--text-dark);
+        }
+
+        .app {
+            width: 100%;
+            max-width: 420px;
+            min-height: 100vh;
+            background-color: var(--bg-color);
+        }
+
+        /* =========================================
+           2. コンポーネント設定
+           ========================================= */
+        .header {
+            background-color: var(--primary-green);
+            color: white;
+            text-align: center;
+            padding: 20px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .card {
+            background-color: var(--card-white);
+            margin: 15px;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: bold;
+            margin-top: 10px;
+            color: #666;
+        }
+
+        select, button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 8px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            font-size: 1rem;
+        }
+
+        button {
+            background-color: var(--primary-green);
+            color: white;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background-color: var(--dark-green);
+        }
+
+        /* =========================================
+           3. 分析結果表示エリア
+           ========================================= */
+        .result-container {
+            display: none; /* 初期状態は非表示 */
+            animation: fadeIn 0.5s ease;
+        }
+
+        .result-text {
+            white-space: pre-line;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-left: 4px solid var(--primary-green);
+            margin-bottom: 15px;
+        }
+
+        /* 病害虫画像のグリッドレイアウト */
+        .disease-gallery {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .disease-item {
+            text-align: center;
+            font-size: 0.75rem;
+            color: #555;
+        }
+
+        .disease-item img {
+            width: 100%;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 1px solid #eee;
+            margin-bottom: 5px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="app">
+        <header class="header">🌱 農業AIアドバイザー</header>
+
+        <section class="card">
+            <label for="crop">対象作物</label>
+            <select id="crop">
+                <option value="トマト">トマト</option>
+                <option value="きゅうり">きゅうり</option>
+                <option value="レタス">レタス</option>
+                <option value="ほうれん草">ほうれん草</option>
+                <option value="キャベツ">キャベツ</option>
+            </select>
+
+            <label for="region">地域選択</label>
+            <select id="region">
+                <option value="新宿">新宿</option>
+                <option value="横浜">横浜</option>
+                <option value="大阪">大阪</option>
+                <option value="札幌">札幌</option>
+                <option value="福岡">福岡</option>
+            </select>
+
+            <button onclick="runAI()">AI分析を開始</button>
+        </section>
+
+        <section id="result-card" class="card result-container">
+            <h3 style="font-size: 1rem; margin-bottom: 10px;">⚠️ AI分析・注意アラート</h3>
+            
+            <div id="result-text" class="result-text"></div>
+
+            <p style="font-size: 0.85rem; font-weight: bold; margin-bottom: 5px;">【警戒すべき病害虫】</p>
+            <div id="disease-gallery" class="disease-gallery">
+                </div>
+        </section>
+    </div>
+
+    <script>
+        /**
+         * 野菜ごとの病害虫データ (画像検索キーワードを元にしたダミー生成用)
+         */
+        const diseaseData = {
+            "トマト": [
+                { name: "うどんこ病", query: "Tomato powdery mildew" },
+                { name: "アブラムシ", query: "Aphids on tomato" }
+            ],
+            "きゅうり": [
+                { name: "べと病", query: "Cucumber downy mildew" },
+                { name: "ウリハムシ", query: "Aulacophora femoralis" }
+            ],
+            "レタス": [
+                { name: "軟腐病", query: "Bacterial soft rot lettuce" },
+                { name: "ナメクジ", query: "Slug on lettuce" }
+            ],
+            "ほうれん草": [
+                { name: "べと病", query: "Spinach downy mildew" },
+                { name: "ケラ", query: "Mole cricket" }
+            ],
+            "キャベツ": [
+                { name: "アオムシ", query: "Cabbage butterfly larva" },
+                { name: "コナガ", query: "Diamondback moth" }
+            ]
+        };
+
+        /**
+         * AI分析メインロジック
+         */
+        function runAI() {
+            const crop = document.getElementById("crop").value;
+            const region = document.getElementById("region").value;
+
+            // 1. 基本アドバイスの生成
+            const weather = ["晴れ 28℃", "雨 20℃", "曇り 23℃"][Math.floor(Math.random() * 3)];
+            const price = ["320円/kg (高騰)", "210円/kg (安定)", "180円/kg (下落)"][Math.floor(Math.random() * 3)];
+
+            let advice = weather.includes("雨") 
+                ? "・雨天のため、防除作業は控え、排水対策を確認してください。" 
+                : "・乾燥が予想されます。早朝に十分な灌水を行ってください。";
+
+            const textOutput = `
+            【${crop} / ${region}】
+            現状：${weather} | 市場：${price}
+
+            ■AI診断：
+            ${advice}
+            現在、${crop}特有の病害虫が発生しやすい環境です。以下の画像の特徴がないか確認してください。
+            `.trim();
+
+            document.getElementById("result-text").innerText = textOutput;
+
+            // 2. 画像ギャラリーの生成
+            const gallery = document.getElementById("disease-gallery");
+            gallery.innerHTML = ""; // 初期化
+
+            const diseases = diseaseData[crop] || [];
+            diseases.forEach(d => {
+                const item = document.createElement("div");
+                item.className = "disease-item";
+                
+                // プレースホルダー画像（実際の運用ではAPI経由で画像URLを取得します）
+                // ここでは学習用にUnsplashのキーワード検索画像を使用
+                const imgUrl = `https://source.unsplash.com/featured/?${encodeURIComponent(d.query)}`;
+                
+                item.innerHTML = `
+                    <img src="${imgUrl}" alt="${d.name}" onerror="this.src='https://via.placeholder.com/150?text=No+Image'">
+                    <div>${d.name}</div>
+                `;
+                gallery.appendChild(item);
+            });
+
+            // 3. 結果を表示
+            document.getElementById("result-card").style.display = "block";
+            
+            // スムーズにスクロール
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>
