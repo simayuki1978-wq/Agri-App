@@ -179,56 +179,37 @@
         padding: 8px;
     }
 
-    /* ── 市場価格パネル ── */
-    .price-panel {
-        display: none;
-        background: linear-gradient(135deg, #fff8e1 0%, #fff3e0 100%);
-        border-radius: 12px;
-        padding: 14px;
-        margin-top: 10px;
-        border: 1px solid #ffe082;
-    }
-    .price-panel.visible { display: block; animation: fadeUp 0.4s ease 0.1s both; }
-    .price-header {
-        font-size: 0.75rem;
-        font-weight: 700;
-        color: var(--soil);
-        margin-bottom: 10px;
+    /* ── 市場価格リンクボタン ── */
+    .btn-price-link {
         display: flex;
         align-items: center;
-        gap: 5px;
-    }
-    .price-grid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
+        justify-content: center;
         gap: 8px;
-    }
-    .price-item {
-        background: white;
-        border-radius: 9px;
-        padding: 10px;
-        box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-    }
-    .price-crop { font-size: 0.72rem; color: var(--sub); margin-bottom: 3px; }
-    .price-value {
-        font-size: 1rem;
+        width: 100%;
+        padding: 13px 14px;
+        margin-top: 12px;
+        border-radius: 10px;
+        border: 1.5px solid #f9a825;
+        font-size: 0.88rem;
         font-weight: 700;
-        color: var(--text);
-        font-family: 'DM Mono', monospace;
+        font-family: 'Noto Sans JP', sans-serif;
+        cursor: pointer;
+        background: linear-gradient(135deg, #fff8e1, #fff3e0);
+        color: #5d4037;
+        text-decoration: none;
+        box-sizing: border-box;
+        transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
     }
-    .price-change {
+    .btn-price-link:hover {
+        background: linear-gradient(135deg, #fff3cd, #ffe0b2);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(249,168,37,0.25);
+    }
+    .btn-price-link-sub {
         font-size: 0.7rem;
-        margin-top: 2px;
-        font-family: 'DM Mono', monospace;
-    }
-    .price-up   { color: var(--danger); }
-    .price-down { color: var(--sky); }
-    .price-flat { color: var(--sub); }
-    .price-source {
-        font-size: 0.65rem;
         color: var(--sub);
-        margin-top: 8px;
-        text-align: right;
+        margin-top: 5px;
+        text-align: center;
     }
 
     /* ── ボタン ── */
@@ -351,47 +332,11 @@
         line-height: 1.55;
     }
 
-    /* ── 開発パネル ── */
-    .dev-panel {
-        margin: 14px;
-        padding: 14px;
-        background: #fff8e1;
-        border: 1px dashed #ffc107;
-        border-radius: 12px;
-        font-size: 0.78rem;
-        color: #795548;
-    }
-    .dev-panel summary { font-weight: 700; cursor: pointer; color: #e65100; }
-    .dev-panel input {
-        width: 100%;
-        padding: 8px 10px;
-        margin-top: 8px;
-        border-radius: 7px;
-        border: 1px solid #ffc107;
-        font-size: 0.82rem;
-        font-family: 'DM Mono', monospace;
-        background: white;
-    }
-    .dev-panel .warning { color: var(--danger); font-weight: 700; margin-top: 6px; }
-
     /* ── アニメーション ── */
     @keyframes fadeUp {
         from { opacity: 0; transform: translateY(12px); }
         to   { opacity: 1; transform: translateY(0); }
     }
-
-    /* ── ステータスバッジ ── */
-    .badge {
-        display: inline-block;
-        font-size: 0.68rem;
-        font-weight: 700;
-        padding: 2px 8px;
-        border-radius: 20px;
-        font-family: 'DM Mono', monospace;
-    }
-    .badge-green  { background: var(--green-100); color: var(--green-700); }
-    .badge-yellow { background: #fff8e1; color: #e65100; }
-    .badge-red    { background: #ffebee; color: var(--danger); }
 </style>
 ```
 
@@ -408,38 +353,6 @@
     <div class="header-sub">農業AIアドバイザー — 天気・市場価格リアルタイム連携</div>
 </header>
 
-<!--
-=====================================================
-[セキュリティ設計]
-
-■ 天気予報 → Open-Meteo API（APIキー不要・無料）
-  https://api.open-meteo.com/v1/forecast
-  → 完全に安全。キー漏洩リスクゼロ。
-
-■ 市場価格 → Claude APIで生成（既存の開発パネル方式）
-  本番では: ブラウザ → 自分のバックエンド → Claude API
-  バックエンド例 (Node.js):
-    app.post('/api/price', async (req, res) => {
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
-        headers: { 'x-api-key': process.env.ANTHROPIC_API_KEY, ... },
-        body: JSON.stringify({ ...req.body })
-      });
-      res.json(await response.json());
-    });
-
-■ Claude API（農業アドバイス）→ 既存の開発パネル方式を維持
-=====================================================
--->
-
-<!-- 開発用パネル -->
-<details class="dev-panel">
-    <summary>⚙️ 開発設定（AI分析に必要・本番では削除）</summary>
-    <p>Claude APIキーを入力するとAI分析が有効になります。<br>天気予報はAPIキーなしで動作します。</p>
-    <label for="api-key-input">Anthropic API Key（開発用）</label>
-    <input type="password" id="api-key-input" placeholder="sk-ant-..." autocomplete="off">
-    <p class="warning">⚠️ 本番ではバックエンドサーバーで管理すること</p>
-</details>
-
 <!-- 入力フォーム -->
 <section class="card">
     <div class="card-title">🌾 作物・地域を選択</div>
@@ -455,16 +368,16 @@
 
     <label for="region">地域選択</label>
     <select id="region">
-        <option value="新宿"    data-lat="35.6896" data-lon="139.7006">東京・新宿</option>
-        <option value="横浜"    data-lat="35.4437" data-lon="139.6380">横浜</option>
-        <option value="大阪"    data-lat="34.6937" data-lon="135.5023">大阪</option>
-        <option value="札幌"    data-lat="43.0642" data-lon="141.3469">札幌</option>
-        <option value="福岡"    data-lat="33.5904" data-lon="130.4017">福岡</option>
+        <option value="新宿"     data-lat="35.6896" data-lon="139.7006">東京・新宿</option>
+        <option value="横浜"     data-lat="35.4437" data-lon="139.6380">横浜</option>
+        <option value="大阪"     data-lat="34.6937" data-lon="135.5023">大阪</option>
+        <option value="札幌"     data-lat="43.0642" data-lon="141.3469">札幌</option>
+        <option value="福岡"     data-lat="33.5904" data-lon="130.4017">福岡</option>
     </select>
 
     <!-- 天気取得ボタン（APIキー不要） -->
-    <button class="btn-weather" id="weather-btn" onclick="loadWeatherAndPrice()">
-        🌤️ 天気・市場価格を取得（無料）
+    <button class="btn-weather" id="weather-btn" onclick="loadWeather()">
+        🌤️ 天気を取得する（無料・APIキー不要）
     </button>
 
     <!-- 天気パネル -->
@@ -475,14 +388,14 @@
         </div>
     </div>
 
-    <!-- 市場価格パネル -->
-    <div class="price-panel" id="price-panel">
-        <div class="price-header">📊 野菜市場価格（AI推計）</div>
-        <div class="price-grid" id="price-grid">
-            <div class="weather-loading">取得中...</div>
-        </div>
-        <div class="price-source">※ Claude AIによる推計価格（農林水産省データ等を参照）</div>
-    </div>
+    <!-- ★ 市場価格リンクボタン（APIキー不要・外部サイトへ誘導） -->
+    <a class="btn-price-link"
+       href="https://www.maff.go.jp/j/seisan/ryutu/yasai/"
+       target="_blank"
+       rel="noopener noreferrer">
+        📊 野菜の市場価格を確認する（農林水産省）↗
+    </a>
+    <div class="btn-price-link-sub">※ 農林水産省の公式ページへ移動します</div>
 
     <button class="btn-primary" id="analyze-btn" onclick="runAI()">🔍 AI農業アドバイスを分析</button>
     <div class="error-banner" id="error-banner" role="alert"></div>
@@ -503,7 +416,7 @@
     <div id="disease-gallery" class="disease-gallery"></div>
 
     <div class="disclaimer">
-        ※ 天気予報はOpen-Meteo APIのリアルタイムデータです。市場価格はClause AIによる推計値であり、実際の取引価格とは異なる場合があります。農業判断は専門家・農業普及員にご相談ください。
+        ※ 天気予報はOpen-Meteo APIのリアルタイムデータです。農業判断は専門家・農業普及員にご相談ください。
     </div>
 </section>
 ```
@@ -524,7 +437,6 @@ const DISEASE_DATA = Object.freeze({
     "キャベツ":  [{ name: "アオムシ",   icon: "🐛" }, { name: "コナガ",     icon: "🦋" }]
 });
 
-/* WMO天気コード → 絵文字マッピング */
 const WMO_ICON = {
     0:'☀️', 1:'🌤️', 2:'⛅', 3:'☁️',
     45:'🌫️', 48:'🌫️',
@@ -569,19 +481,46 @@ function clearError() {
 
 /* =============================================
    天気予報 — Open-Meteo API（APIキー不要）
-   
-   [安全性] APIキー不要の公開APIを使用。
-   ドキュメント: https://open-meteo.com/en/docs
    ============================================= */
-async function fetchWeather(lat, lon) {
-    const url = `https://api.open-meteo.com/v1/forecast`
-        + `?latitude=${lat}&longitude=${lon}`
-        + `&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_sum`
-        + `&timezone=Asia%2FTokyo&forecast_days=3`;
+let cachedWeatherSummary = '';
 
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`天気APIエラー: ${res.status}`);
-    return res.json();
+async function loadWeather() {
+    const regionSelect   = document.getElementById('region');
+    const selectedOption = regionSelect.options[regionSelect.selectedIndex];
+    const lat = selectedOption.dataset.lat;
+    const lon = selectedOption.dataset.lon;
+
+    const weatherBtn   = document.getElementById('weather-btn');
+    const weatherPanel = document.getElementById('weather-panel');
+
+    weatherBtn.disabled    = true;
+    weatherBtn.textContent = '⏳ 取得中...';
+    weatherPanel.classList.add('visible');
+
+    try {
+        const url = `https://api.open-meteo.com/v1/forecast`
+            + `?latitude=${lat}&longitude=${lon}`
+            + `&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_sum`
+            + `&timezone=Asia%2FTokyo&forecast_days=3`;
+
+        const res  = await fetch(url);
+        if (!res.ok) throw new Error(`天気APIエラー: ${res.status}`);
+        const data = await res.json();
+
+        renderWeather(data);
+
+        const code = data.daily.weathercode[0];
+        const tmax = Math.round(data.daily.temperature_2m_max[0]);
+        const rain = data.daily.precipitation_sum[0];
+        cachedWeatherSummary = `${WMO_ICON[code] || '🌡️'} 最高${tmax}℃、降水量${rain}mm`;
+
+    } catch (e) {
+        const grid = document.getElementById('weather-grid');
+        grid.innerHTML = `<div style="color:#c62828;font-size:0.8rem;padding:8px;">取得失敗: ${escapeHTML(e.message)}</div>`;
+    }
+
+    weatherBtn.disabled    = false;
+    weatherBtn.textContent = '🔄 再取得';
 }
 
 function renderWeather(data) {
@@ -591,185 +530,21 @@ function renderWeather(data) {
     const { time, weathercode, temperature_2m_max, temperature_2m_min, precipitation_sum } = data.daily;
     const labels = ['今日', '明日', '明後日'];
 
-    time.slice(0, 3).forEach((dateStr, i) => {
-        const code  = weathercode[i];
-        const icon  = WMO_ICON[code] || '🌡️';
-        const tmax  = Math.round(temperature_2m_max[i]);
-        const tmin  = Math.round(temperature_2m_min[i]);
-        const rain  = precipitation_sum[i].toFixed(1);
+    time.slice(0, 3).forEach((_, i) => {
+        const icon = WMO_ICON[weathercode[i]] || '🌡️';
+        const tmax = Math.round(temperature_2m_max[i]);
+        const tmin = Math.round(temperature_2m_min[i]);
+        const rain = precipitation_sum[i].toFixed(1);
 
-        const day = document.createElement('div');
-        day.className = 'weather-day';
-
-        const dateEl = document.createElement('div');
-        dateEl.className = 'weather-date';
-        dateEl.textContent = labels[i];
-
-        const iconEl = document.createElement('div');
-        iconEl.className = 'weather-icon';
-        iconEl.textContent = icon;
-
-        const tempEl = document.createElement('div');
-        tempEl.className = 'weather-temp';
-        tempEl.textContent = `${tmax}° / ${tmin}°`;
-
-        const rainEl = document.createElement('div');
-        rainEl.className = 'weather-rain';
-        rainEl.textContent = `💧 ${rain}mm`;
+        const day    = document.createElement('div'); day.className = 'weather-day';
+        const dateEl = document.createElement('div'); dateEl.className = 'weather-date'; dateEl.textContent = labels[i];
+        const iconEl = document.createElement('div'); iconEl.className = 'weather-icon'; iconEl.textContent = icon;
+        const tempEl = document.createElement('div'); tempEl.className = 'weather-temp'; tempEl.textContent = `${tmax}° / ${tmin}°`;
+        const rainEl = document.createElement('div'); rainEl.className = 'weather-rain'; rainEl.textContent = `💧 ${rain}mm`;
 
         day.append(dateEl, iconEl, tempEl, rainEl);
         grid.appendChild(day);
     });
-}
-
-/* =============================================
-   市場価格 — Claude API で生成
-   
-   [安全性]
-   - 本番: fetch('/api/price', ...) でバックエンド経由
-   - 開発: 開発パネルのキーを使用
-   ============================================= */
-async function fetchMarketPrice(crop, region, weatherSummary) {
-    const devKey = document.getElementById('api-key-input').value.trim();
-
-    // APIキーなし → ダミーデータ
-    if (!devKey) return generateDummyPrices(crop);
-
-    const prompt = `あなたは農産物市場の専門家です。
-現在の市場状況を踏まえ、以下の野菜の卸売価格を推計してください。
-
-【選択作物】${crop}
-【地域】${region}
-【天気概況】${weatherSummary}
-
-以下のJSON形式のみで回答してください（説明文不要）:
-{
-  "prices": [
-    {"crop": "作物名", "price": "数値(円/kg)", "change": "+XX%または-XX%", "trend": "up/down/flat"},
-    {"crop": "作物名", "price": "数値(円/kg)", "change": "+XX%または-XX%", "trend": "up/down/flat"}
-  ]
-}
-
-選択作物を含む関連野菜3〜4品目を含めてください。
-価格は農林水産省の市場統計に基づく妥当な範囲で推計してください。`;
-
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': devKey,
-            'anthropic-version': '2023-06-01'
-        },
-        body: JSON.stringify({
-            model: 'claude-sonnet-4-20250514',
-            max_tokens: 400,
-            messages: [{ role: 'user', content: prompt }]
-        })
-    });
-
-    if (!res.ok) throw new Error(`価格APIエラー: ${res.status}`);
-    const data = await res.json();
-    const text = data.content?.[0]?.text || '{}';
-
-    try {
-        const clean = text.replace(/```json|```/g, '').trim();
-        return JSON.parse(clean).prices || generateDummyPrices(crop);
-    } catch {
-        return generateDummyPrices(crop);
-    }
-}
-
-function generateDummyPrices(crop) {
-    const base = {
-        "トマト":    { price: 310, others: [{ crop: "ミニトマト", price: 520, change: "+5%", trend: "up" }, { crop: "きゅうり", price: 180, change: "-3%", trend: "down" }] },
-        "きゅうり":  { price: 175, others: [{ crop: "ズッキーニ", price: 290, change: "+2%", trend: "up" }, { crop: "トマト",   price: 310, change: "+4%", trend: "up" }] },
-        "レタス":    { price: 145, others: [{ crop: "サニーレタス", price: 210, change: "0%", trend: "flat" }, { crop: "白菜",   price: 95,  change: "-2%", trend: "down" }] },
-        "ほうれん草":{ price: 260, others: [{ crop: "小松菜",   price: 195, change: "+1%", trend: "up" }, { crop: "水菜",     price: 230, change: "0%",  trend: "flat" }] },
-        "キャベツ":  { price: 88,  others: [{ crop: "ブロッコリー", price: 310, change: "+6%", trend: "up" }, { crop: "白菜",  price: 95,  change: "-2%", trend: "down" }] }
-    };
-    const d = base[crop] || base["トマト"];
-    const mainChange = (Math.random() > 0.5 ? "+" : "-") + (Math.floor(Math.random() * 8) + 1) + "%";
-    const mainTrend  = mainChange.startsWith("+") ? "up" : "down";
-    return [
-        { crop, price: d.price, change: mainChange, trend: mainTrend },
-        ...d.others
-    ];
-}
-
-function renderPrices(prices) {
-    const grid = document.getElementById('price-grid');
-    grid.replaceChildren();
-
-    prices.forEach(item => {
-        const el = document.createElement('div');
-        el.className = 'price-item';
-
-        const cropEl = document.createElement('div');
-        cropEl.className = 'price-crop';
-        cropEl.textContent = item.crop;
-
-        const valEl = document.createElement('div');
-        valEl.className = 'price-value';
-        valEl.textContent = `¥${item.price}/kg`;
-
-        const chgEl = document.createElement('div');
-        chgEl.className = `price-change price-${item.trend}`;
-        const arrow = item.trend === 'up' ? '▲' : item.trend === 'down' ? '▼' : '─';
-        chgEl.textContent = `${arrow} ${item.change}`;
-
-        el.append(cropEl, valEl, chgEl);
-        grid.appendChild(el);
-    });
-}
-
-/* =============================================
-   天気＋市場価格の一括取得
-   ============================================= */
-let cachedWeatherSummary = '';
-
-async function loadWeatherAndPrice() {
-    const regionSelect = document.getElementById('region');
-    const selectedOption = regionSelect.options[regionSelect.selectedIndex];
-    const lat  = selectedOption.dataset.lat;
-    const lon  = selectedOption.dataset.lon;
-    const region = regionSelect.value;
-    const crop   = document.getElementById('crop').value;
-
-    const weatherBtn  = document.getElementById('weather-btn');
-    const weatherPanel = document.getElementById('weather-panel');
-    const pricePanel   = document.getElementById('price-panel');
-
-    weatherBtn.disabled = true;
-    weatherBtn.textContent = '⏳ 取得中...';
-    weatherPanel.classList.add('visible');
-    pricePanel.classList.add('visible');
-
-    // 天気取得（APIキー不要）
-    try {
-        const weatherData = await fetchWeather(lat, lon);
-        renderWeather(weatherData);
-
-        // 天気サマリー（市場価格生成に渡す）
-        const code = weatherData.daily.weathercode[0];
-        const tmax = Math.round(weatherData.daily.temperature_2m_max[0]);
-        const rain = weatherData.daily.precipitation_sum[0];
-        cachedWeatherSummary = `${WMO_ICON[code] || '🌡️'} 最高${tmax}℃、降水量${rain}mm`;
-
-    } catch (e) {
-        const grid = document.getElementById('weather-grid');
-        grid.innerHTML = `<div style="color:#c62828;font-size:0.8rem;padding:8px;">取得失敗: ${escapeHTML(e.message)}</div>`;
-    }
-
-    // 市場価格取得（APIキー不要の場合はダミー）
-    try {
-        const prices = await fetchMarketPrice(crop, region, cachedWeatherSummary);
-        renderPrices(prices);
-    } catch (e) {
-        renderPrices(generateDummyPrices(crop));
-    }
-
-    weatherBtn.disabled = false;
-    weatherBtn.textContent = '🔄 再取得';
 }
 
 /* =============================================
@@ -780,16 +555,11 @@ function renderDiseaseGallery(crop) {
     gallery.replaceChildren();
 
     (DISEASE_DATA[crop] || []).forEach(d => {
-        const item = document.createElement('div');
-        item.className = 'disease-item';
-
-        const ph = document.createElement('div');
-        ph.className = 'disease-placeholder';
+        const item = document.createElement('div'); item.className = 'disease-item';
+        const ph   = document.createElement('div'); ph.className = 'disease-placeholder';
         ph.appendChild(document.createTextNode(d.icon));
-
         const nm = document.createElement('div');
         nm.appendChild(document.createTextNode(d.name));
-
         item.append(ph, nm);
         gallery.appendChild(item);
     });
@@ -797,15 +567,11 @@ function renderDiseaseGallery(crop) {
 
 /* =============================================
    Claude API — 農業アドバイス
+   ※ APIキーは開発パネルで入力（本番はバックエンド経由に変更）
    ============================================= */
 async function callClaudeAPI(crop, region) {
-    const devKey = document.getElementById('api-key-input').value.trim();
-
-    if (!devKey) return generateDummyAdvice(crop, region);
-
     const weatherInfo = cachedWeatherSummary
-        ? `\n【今日の天気】${cachedWeatherSummary}`
-        : '';
+        ? `\n【今日の天気】${cachedWeatherSummary}` : '';
 
     const prompt = `あなたは農業の専門家AIです。以下の条件で農家向けの簡潔なアドバイスを日本語で提供してください。
 
@@ -819,43 +585,19 @@ async function callClaudeAPI(crop, region) {
 
 回答は250字以内で簡潔にまとめてください。`;
 
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': devKey,
-            'anthropic-version': '2023-06-01'
-        },
-        body: JSON.stringify({
-            model: 'claude-sonnet-4-20250514',
-            max_tokens: 512,
-            messages: [{ role: 'user', content: prompt }]
-        })
-    });
+    // ★ 本番環境では下記をバックエンド経由に変更してください
+    // const res = await fetch('/api/analyze', {
+    //     method: 'POST',
+    //     headers: { 'Content-Type': 'application/json' },
+    //     body: JSON.stringify({ crop, region, weatherSummary: cachedWeatherSummary })
+    // });
 
-    if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err?.error?.message || `APIエラー: ${res.status}`);
-    }
+    return `【${crop} / ${region}】
 
-    const data = await res.json();
-    return data.content?.[0]?.text || 'レスポンスを取得できませんでした。';
-}
-
-function generateDummyAdvice(crop, region) {
-    const weather = cachedWeatherSummary || '晴れ 25℃';
-    const isRainy = weather.includes('🌧') || weather.includes('🌦');
-    const advice  = isRainy
-        ? '・雨天のため防除作業は控え、排水対策を確認してください。'
-        : '・乾燥が予想されます。早朝に十分な灌水を行ってください。';
-
-    return `【${crop} / ${region}】（デモ表示）
-天候：${weather}
-
-■ 現在の注意点
-${advice}
+${cachedWeatherSummary ? `天候：${cachedWeatherSummary}\n\n` : ''}■ 現在の注意点
 ・${crop}特有の病害虫が発生しやすい環境です。
 ・葉の変色・斑点がないか定期的に確認してください。
+・気温変化に注意し、防寒・防暑対策を行ってください。
 
 ■ 今週の推奨作業
 ・葉の状態を毎朝チェックし、異常があれば記録する。
@@ -863,7 +605,7 @@ ${advice}
 
 ■ 病害虫リスク評価：中
 
-※ APIキーを設定するとAIによる実際の分析が表示されます。`;
+※ Claude APIを接続するとAIによる実際の分析が表示されます。`;
 }
 
 /* =============================================
@@ -886,7 +628,6 @@ async function runAI() {
 
     try {
         const aiText = await callClaudeAPI(crop, region);
-
         document.getElementById('result-text').innerText = aiText;
         renderDiseaseGallery(crop);
 
